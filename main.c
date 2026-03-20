@@ -40,6 +40,11 @@ void arena_pop(mem_arena* arena, size_t size);
 void arena_pop_to(mem_arena* arena, size_t pos);
 void arena_clear(mem_arena* arena);
 
+#define PUSH_STRUCT(arena, T) (T*)arena_push((arena), sizeof(T), false)
+#define PUSH_STRUCT_NZ(arena, T) (T*)arena_push((arena), sizeof(T), true)
+#define PUSH_ARRAY(arena, T, n) (T*)arena_push((arena), sizeof(T) * (n), false)
+#define PUSH_ARRAY_NZ(arena, T, n) (T*)arena_push((arena), sizeof(T) * (n), true)
+
 int main(void) {
 
     mem_arena* arena = arena_create(MiB(1));
