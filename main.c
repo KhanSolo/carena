@@ -45,6 +45,12 @@ void arena_clear(mem_arena* arena);
 #define PUSH_ARRAY(arena, T, n) (T*)arena_push((arena), sizeof(T) * (n), false)
 #define PUSH_ARRAY_NZ(arena, T, n) (T*)arena_push((arena), sizeof(T) * (n), true)
 
+u32 plat_get_pagesize(void);
+void* plat_mem_reserve(u64 size);
+b32 plat_mem_commit(void* ptr, u64 size);
+b32 plat_mem_decommit(void* ptr, u64 size);
+b32 plat_mem_release(void* ptr, u64 size);
+
 int main(void) {
 
     mem_arena* arena = arena_create(MiB(1));
@@ -95,3 +101,32 @@ void arena_pop_to(mem_arena* arena, size_t pos) {
 void arena_clear(mem_arena* arena) { 
     arena_pop_to(arena, ARENA_BASE_POS);
 }
+
+#ifdef _WIN32
+
+#include <windows.h>
+
+u32 plat_get_pagesize(void) {
+    SYSTEM_INFO info = {0};
+    GetSystemInfo(&info);
+    return info.dwPageSize;
+}
+
+void* plat_mem_reserve(u64 size){
+    return VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_READWRITE);
+}
+
+b32 plat_mem_commit(void* ptr, u64 size){
+    void* p = VirtualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE);
+    return p != NULL;
+}
+
+b32 plat_mem_decommit(void* ptr, u64 size){
+    return VirtualFree(ptr, size, MEM_DECOMMIT);
+}
+
+b32 plat_mem_release(void* ptr, u64 size){
+    return VirtualFree(ptr, size, MEM_RELEASE);
+}
+
+#endif
